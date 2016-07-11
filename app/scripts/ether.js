@@ -2,11 +2,9 @@ var Web3 = require('web3');
 var web3 = new Web3();
 web3.setProvider(new web3.providers.HttpProvider());
 
-
 // var ethersignalContract = web3.eth.contract([{"constant":false,"inputs":[{"name":"pro","type":"bool"}],"name":"setSignal","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"endSignal","outputs":[],"type":"function"},{"inputs":[{"name":"rAddr","type":"address"}],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"pro","type":"bool"},{"indexed":false,"name":"addr","type":"address"}],"name":"LogSignal","type":"event"},{"anonymous":false,"inputs":[],"name":"EndSignal","type":"event"}]);
 
 // var positionregistryContract = web3.eth.contract([{"constant":false,"inputs":[{"name":"title","type":"string"},{"name":"text","type":"string"}],"name":"registerPosition","outputs":[],"type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"regAddr","type":"address"},{"indexed":true,"name":"sigAddr","type":"address"},{"indexed":false,"name":"title","type":"string"},{"indexed":false,"name":"text","type":"string"}],"name":"LogPosition","type":"event"}]);
-// var positionregistry = positionregistryContract.at('0x0265a5b822625ca506c474912662617c394bbb66')
 
 // function ListPositions() {
 // 	var posMap = {};
@@ -21,7 +19,7 @@ web3.setProvider(new web3.providers.HttpProvider());
 // 	Object.keys(posMap).map(function(k) { console.log(k + ": " + posMap[k]); });
 // }
 
-//TODO move this out of global scope
+// TODO move this out of global scope
 // var to = positionregistry.address;
 // console.log(positionregistry);
 var to = '0x3B0C2BA7A03725E0f9aC5a55CB813823053d5eBE';
@@ -30,13 +28,6 @@ var connected = web3.isConnected();
 console.log("connected " + connected);
 
 var getBalance = web3.eth.getBalance(web3.eth.accounts[0])
-// var getBalance = web3.eth.getBalance("0x8cce0edd933bcbbb0d9332282d96afb943e87649")
-
-// var balance = web3.eth.getBalance(web3.eth.accounts[0]);
-// console.log(balance); // instanceof BigNumber
-// console.log(balance.toString(10)); // '1000000000000'
-// console.log(balance.toNumber()); // 1000000000000
-
 
 
 app.directive('networkStats', ['ethereum', '$interval','$rootScope',  function(ethereum, $interval, $rootScope) {
@@ -94,6 +85,10 @@ app.directive('proposalsList', ['proposalService','ethereum','$rootScope', funct
 		link: function(scope) {
 			scope.proposals = proposalService.proposals; 	
 			scope.newProposals = $rootScope.newProposals;
+			scope.percentage = function(a, b){
+				return a + b;
+			}
+
 			scope.cancel = function() {
 				$rootScope.newProposals = [];
 			}
@@ -231,6 +226,9 @@ app.service('proposalService', ['ethSignalContract', '$q','ethereum','$rootScope
 					proposals[proposalId][5].push(vote);
 					proposals[proposalId][7] += balance;
 				}
+				var percent = calcPercent( proposals[proposalId][6], proposals[proposalId][7] );
+				proposals[proposalId][10] = percent
+
 				// console.log(proposalId,balance, vote.args.position, vote.args.voter, vote.blockNumber);
 			}	
 		});
@@ -238,10 +236,18 @@ app.service('proposalService', ['ethSignalContract', '$q','ethereum','$rootScope
 		function mergeData(proposals, votes) {
 			//combine votes and proposals to display results
 		}
-
+		function calcPercent(A, B){
+			var res = []
+			res[0] = Math.round(A * 100.0 / (A + B))
+			res[1] = Math.round(B * 100.0 / (A + B))
+			return res 
+		}
 		return {
 			proposals: proposals,
 			votes: votes,
+			percentage: function(inP){
+				console.log(out);
+			},
 			vote: function(proposalId, position) {
 				// make this async return promise
 				var deferred = $q.defer();
